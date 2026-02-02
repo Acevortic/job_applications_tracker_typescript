@@ -1,0 +1,43 @@
+steps:
+  # Build the TypeScript project
+  - name: 'gcr.io/cloud-builders/npm'
+    args: ['install']
+  
+  - name: 'gcr.io/cloud-builders/npm'
+    args: ['run', 'build']
+
+  # Deploy email processing function
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'functions'
+      - 'deploy'
+      - 'processEmail'
+      - '--runtime'
+      - 'nodejs20'
+      - '--trigger-http'
+      - '--entry-point'
+      - 'processEmail'
+      - '--source'
+      - '.'
+      - '--region'
+      - 'us-central1'
+      - '--allow-unauthenticated'
+
+  # Deploy daily summary function
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'functions'
+      - 'deploy'
+      - 'dailySummary'
+      - '--runtime'
+      - 'nodejs20'
+      - '--trigger-http'
+      - '--entry-point'
+      - 'dailySummary'
+      - '--source'
+      - '.'
+      - '--region'
+      - 'us-central1'
+      - '--allow-unauthenticated'

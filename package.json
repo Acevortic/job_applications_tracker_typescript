@@ -1,0 +1,44 @@
+{
+  "name": "job-tracker-automations",
+  "version": "1.0.0",
+  "description": "Automated job application tracker using Gmail, Google Sheets, and Discord",
+  "main": "dist/index.js",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "engines": {
+    "node": "20"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "ts-node src/server.ts",
+    "test:email": "ts-node src/test.ts email",
+    "test:summary": "ts-node src/test.ts summary",
+    "get-refresh-token": "ts-node src/utils/getRefreshToken.ts",
+    "deploy:email": "gcloud functions deploy processEmail --gen2 --runtime nodejs20 --trigger-http --entry-point processEmail --source . --region us-central1 --main dist/main-processEmail.js",
+    "deploy:summary": "gcloud functions deploy dailySummary --gen2 --runtime nodejs20 --trigger-http --entry-point dailySummary --source . --region us-central1 --main dist/main-dailySummary.js",
+    "deploy:all": "npm run deploy:email && npm run deploy:summary"
+  },
+  "keywords": [
+    "job-tracker",
+    "automation",
+    "gmail",
+    "google-sheets",
+    "discord"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@google-cloud/functions-framework": "^3.3.0",
+    "googleapis": "^128.0.0",
+    "openai": "^4.20.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.3",
+    "ts-node": "^10.9.2"
+  }
+}
