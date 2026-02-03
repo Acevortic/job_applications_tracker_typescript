@@ -3,8 +3,12 @@
  * Runs email processing on a schedule and daily summaries
  */
 
+import { DateTime } from 'luxon';
 import { processEmail } from './functions/processEmail';
 import { dailySummary } from './jobs/dailySummary';
+
+const DAILY_SUMMARY_ZONE = 'America/Chicago';
+const DAILY_SUMMARY_HOUR = 9;
 
 // Mock request/response objects for direct function calls
 function createMockReqRes() {
@@ -59,8 +63,6 @@ async function runDailySummary() {
  */
 function scheduleTasks() {
   const EMAIL_CHECK_INTERVAL = 30 * 60 * 1000; // 30 minutes
-  const DAILY_SUMMARY_HOUR = 9; // 9 AM
-  const DAILY_SUMMARY_MINUTE = 0;
 
   // Run email processing immediately on startup
   runEmailProcessing();
@@ -70,19 +72,16 @@ function scheduleTasks() {
     runEmailProcessing();
   }, EMAIL_CHECK_INTERVAL);
 
-  // Schedule daily summary
+  // Schedule daily summary at 9 AM America/Chicago (handles CST/CDT automatically)
   function scheduleDailySummary() {
-    const now = new Date();
-    const targetTime = new Date();
-    targetTime.setHours(DAILY_SUMMARY_HOUR, DAILY_SUMMARY_MINUTE, 0, 0);
-
-    // If target time has passed today, schedule for tomorrow
-    if (targetTime.getTime() < now.getTime()) {
-      targetTime.setDate(targetTime.getDate() + 1);
+    const now = DateTime.now().setZone(DAILY_SUMMARY_ZONE);
+    let target = now.set({ hour: DAILY_SUMMARY_HOUR, minute: 0, second: 0, millisecond: 0 });
+    if (target <= now) {
+      target = target.plus({ days: 1 });
     }
 
-    const msUntilTarget = targetTime.getTime() - now.getTime();
-    console.log(`\n⏰ Daily summary scheduled for ${targetTime.toLocaleString()}`);
+    const msUntilTarget = target.toMillis() - DateTime.now().toMillis();
+    console.log(`\n⏰ Daily summary scheduled for ${target.toLocaleString(DateTime.DATETIME_FULL)} (${target.toUTC().toISO()})`);
 
     setTimeout(() => {
       runDailySummary();
@@ -97,7 +96,7 @@ function scheduleTasks() {
 // Start the server
 console.log('🚀 Job Tracker Automations Server Starting...');
 console.log('📧 Email processing: Every 30 minutes');
-console.log('📊 Daily summary: 9:00 AM daily\n');
+console.log('📊 Daily summary: 9:00 AM America/Chicago daily\n');
 
 scheduleTasks();
 
